@@ -1,0 +1,208 @@
+# ArXiv Research Agent Configuration
+# ===================================
+
+# Research interests and filtering
+research:
+  # Primary research areas to focus on
+  interests:
+    - "Large Language Models"
+    - "AI Agents and Multi-agent Systems"
+    - "Reasoning and Planning"
+    - "Computer Vision"
+    - "Natural Language Processing"
+    - "Machine Learning"
+    - "Reinforcement Learning"
+  
+  # arXiv categories to monitor
+  arxiv_categories:
+    - "cs.AI"    # Artificial Intelligence
+    - "cs.LG"    # Machine Learning
+    - "cs.CL"    # Computation and Language
+    - "cs.CV"    # Computer Vision
+    - "cs.RO"    # Robotics
+    - "stat.ML"  # Machine Learning (Statistics)
+  
+  # Keywords to boost relevance
+  boost_keywords:
+    - "breakthrough"
+    - "state-of-the-art"
+    - "novel"
+    - "significant improvement"
+    - "outperforms"
+    - "first"
+    - "new method"
+  
+  # Keywords to filter out (lower priority)
+  exclude_keywords:
+    - "survey"
+    - "review"
+    - "tutorial"
+  
+  # Filtering criteria
+  filters:
+    max_papers_per_day: 50
+    days_back: 1  # How many days to look back
+    min_relevance_score: 0.3
+    min_significance_score: 0.4
+
+# Scheduling configuration
+schedule:
+  # Daily digest schedule (24-hour format)
+  daily_digest:
+    enabled: true
+    time: "09:00"  # 9 AM
+    timezone: "UTC"
+  
+  # Weekly summary schedule
+  weekly_summary:
+    enabled: true
+    day: "Monday"
+    time: "08:00"
+    timezone: "UTC"
+  
+  # Real-time monitoring (check for new papers)
+  monitoring:
+    enabled: false
+    interval_hours: 4
+
+# Output configuration
+output:
+  # Directory for saving digests - Windows path via WSL
+  directory: "/mnt/c/Users/Tyvon/OneDrive/Documents/TyvonneDocs/VBE/AI_Research"
+  
+  # Formats to generate
+  formats:
+    html: true
+    markdown: true
+    json: true
+    email: true
+  
+  # File naming
+  filename_pattern: "digest_{date}_{time}"
+
+# Notification settings
+notifications:
+  # Email settings
+  email:
+    enabled: false
+    smtp:
+      server: "smtp.gmail.com"
+      port: 587
+      username: "${ARXIV_AGENT_EMAIL_USERNAME}"
+      password: "${ARXIV_AGENT_EMAIL_PASSWORD}"
+      from_email: "${ARXIV_AGENT_EMAIL_FROM}"
+    
+    recipients:
+      - "donvon@vonbase.com"
+    
+    subject_template: "🔬 AI Research Digest - {date}"
+  
+  # Discord webhook
+  discord:
+    enabled: false
+    webhook_url: ""  # Your Discord webhook URL
+    mention_role: ""  # Optional role to mention
+  
+  # Slack webhook (future)
+  slack:
+    enabled: false
+    webhook_url: ""
+
+# Claude Code SDK settings
+claude:
+  # Working directory for Claude operations
+  working_directory: "/home/vonbase/dev/arxiv-research-agent"
+  
+  # Claude options
+  options:
+    max_turns: 3
+    max_thinking_tokens: 8000
+    permission_mode: "acceptEdits"
+  
+  # Analysis settings
+  analysis:
+    batch_size: 5  # Number of papers to analyze concurrently
+    timeout_seconds: 300  # Timeout per paper analysis
+    retry_attempts: 2
+
+# Logging configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  
+  # Log files
+  files:
+    main: "logs/agent.log"
+    errors: "logs/errors.log"
+  
+  # Log rotation
+  rotation:
+    max_size_mb: 10
+    backup_count: 5
+  
+  # Console output
+  console:
+    enabled: true
+    level: "INFO"
+
+# Performance settings
+performance:
+  # Rate limiting
+  rate_limiting:
+    arxiv_api:
+      requests_per_minute: 30
+    claude_api:
+      requests_per_minute: 20
+  
+  # Caching
+  cache:
+    enabled: true
+    ttl_hours: 24
+    directory: "cache"
+  
+  # Concurrent processing
+  concurrency:
+    max_concurrent_analyses: 3
+    max_concurrent_fetches: 5
+
+# Advanced features
+features:
+  # Trend analysis
+  trend_analysis:
+    enabled: true
+    lookback_days: 30
+    min_papers_for_trend: 10
+  
+  # Learning from user feedback
+  learning:
+    enabled: false
+    feedback_file: "feedback.json"
+  
+  # Research paper recommendations
+  recommendations:
+    enabled: true
+    max_recommendations: 5
+  
+  # Citation tracking
+  citations:
+    enabled: false
+    track_highly_cited: true
+    citation_threshold: 50
+
+# Dashboard settings (future feature)
+dashboard:
+  enabled: false
+  host: "localhost"
+  port: 8080
+  
+# Database settings (future feature)
+database:
+  enabled: false
+  type: "sqlite"
+  path: "data/research_agent.db"
+
+# Backup settings
+backup:
+  enabled: true
+  directory: "backups"
+  keep_days: 30
+  compress: true

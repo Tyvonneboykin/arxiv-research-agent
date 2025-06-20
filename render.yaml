@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: arxiv-research-agent
+    env: python
+    plan: starter
+    buildCommand: |
+      pip install -r requirements.txt
+      python setup.py
+    startCommand: python src/research_agent.py
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        value: YOUR_ANTHROPIC_API_KEY_HERE
+      - key: ARXIV_AGENT_EMAIL_USERNAME
+        value: donvon@vonbase.com
+      - key: ARXIV_AGENT_EMAIL_FROM
+        value: donvon@vonbase.com
+      - key: ARXIV_AGENT_LOG_LEVEL
+        value: INFO
+      - key: PYTHONPATH
+        value: /opt/render/project/src
+    region: oregon
+    autoDeploy: false
