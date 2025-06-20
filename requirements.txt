@@ -6,7 +6,7 @@ claude-code-sdk>=0.0.11
 schedule>=1.2.0
 
 # arXiv and analysis
-xml-etree>=0.0.1
+# xml.etree.ElementTree is part of Python stdlib - no package needed
 
 # Optional dependencies for enhanced features
 python-dateutil>=2.8.0
