@@ -63,8 +63,8 @@ schedule:
 
 # Output configuration
 output:
-  # Directory for saving digests - Windows path via WSL
-  directory: "/mnt/c/Users/Tyvon/OneDrive/Documents/TyvonneDocs/VBE/AI_Research"
+  # Directory for saving digests - Linux container path
+  directory: "/tmp/arxiv_output"
   
   # Formats to generate
   formats:
@@ -107,7 +107,7 @@ notifications:
 # Claude Code SDK settings
 claude:
   # Working directory for Claude operations
-  working_directory: "/home/vonbase/dev/arxiv-research-agent"
+  working_directory: "/opt/render/project/src"
   
   # Claude options
   options:
