@@ -62,6 +62,41 @@ def verify_environment():
         else:
             logger.info(f"✅ Environment variable {env_var} is set")
     
+    # Check Claude CLI availability
+    import shutil
+    claude_cli = shutil.which("claude")
+    if claude_cli:
+        logger.info(f"✅ Claude CLI found at: {claude_cli}")
+        # Try to get version
+        try:
+            result = subprocess.run(["claude", "--version"], capture_output=True, text=True, timeout=10)
+            if result.returncode == 0:
+                logger.info(f"✅ Claude CLI version: {result.stdout.strip()}")
+            else:
+                logger.warning(f"⚠️ Claude CLI found but version check failed: {result.stderr}")
+        except Exception as e:
+            logger.warning(f"⚠️ Claude CLI found but version check error: {e}")
+    else:
+        logger.warning("⚠️ Claude CLI not found in PATH - paper analysis may fail")
+        # Try common paths
+        potential_paths = [
+            "/opt/render/.nvm/versions/node/v20.18.0/bin/claude",
+            "/opt/render/.nvm/versions/node/v20.17.0/bin/claude", 
+            "/opt/render/.nvm/versions/node/v20.16.0/bin/claude",
+            "/usr/local/bin/claude",
+            "/root/.nvm/versions/node/v20.18.0/bin/claude"
+        ]
+        
+        found_alternate = False
+        for path in potential_paths:
+            if os.path.exists(path):
+                logger.info(f"✅ Claude CLI found at alternate path: {path}")
+                found_alternate = True
+                break
+        
+        if not found_alternate:
+            logger.error("❌ Claude CLI not accessible - this will prevent paper analysis")
+    
     return True
 
 def test_critical_imports():

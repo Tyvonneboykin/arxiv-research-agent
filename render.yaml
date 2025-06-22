@@ -20,8 +20,15 @@ services:
       export PYTHONPATH="/opt/render/project:/opt/render/project/src:$PYTHONPATH"
       cd /opt/render/project
       echo "🚀 Starting ArXiv Research Agent with Claude Code SDK analysis..."
-      echo "🔧 Claude CLI available: $(which claude 2>/dev/null || echo 'Not found')"
+      # Ensure NVM and Node environment is available
       export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      nvm use 20
+      # Add npm global bin to PATH for Claude CLI access
+      export PATH="$(npm bin -g):$PATH"
+      echo "🔧 Claude CLI available: $(which claude 2>/dev/null || echo 'Not found in PATH')"
+      echo "🔧 Node.js version: $(node --version)"
+      echo "🔧 npm global path: $(npm bin -g)"
+      # Start the agent
       python src/research_agent.py --once
     envVars:
       - key: ANTHROPIC_API_KEY

@@ -67,13 +67,47 @@ class ClaudeAnalyzer:
         self.working_dir = working_dir or os.getcwd()
         self.logger = logging.getLogger(__name__)
         
-        # Configure Claude options
-        self.claude_options = ClaudeCodeOptions(
-            cwd=self.working_dir,
-            permission_mode="acceptEdits",
-            max_turns=3,
-            max_thinking_tokens=8000
-        )
+        # Configure Claude options with explicit CLI path for Render deployment
+        cli_path = None
+        
+        # Try to find Claude CLI in common Render locations
+        potential_paths = [
+            "/opt/render/.nvm/versions/node/v20.18.0/bin/claude",
+            "/opt/render/.nvm/versions/node/v20.17.0/bin/claude", 
+            "/opt/render/.nvm/versions/node/v20.16.0/bin/claude",
+            "/usr/local/bin/claude",
+            "/root/.nvm/versions/node/v20.18.0/bin/claude",
+            "/home/render/.nvm/versions/node/v20.18.0/bin/claude"
+        ]
+        
+        # Check which path exists
+        import shutil
+        cli_path = shutil.which("claude")  # Try PATH first
+        
+        if not cli_path:
+            # Fallback to checking potential paths
+            for path in potential_paths:
+                if os.path.exists(path):
+                    cli_path = path
+                    break
+        
+        if cli_path:
+            self.logger.info(f"Found Claude CLI at: {cli_path}")
+            self.claude_options = ClaudeCodeOptions(
+                cwd=self.working_dir,
+                permission_mode="acceptEdits",
+                max_turns=3,
+                max_thinking_tokens=8000,
+                cli_path=cli_path
+            )
+        else:
+            self.logger.warning("Claude CLI not found, using default options")
+            self.claude_options = ClaudeCodeOptions(
+                cwd=self.working_dir,
+                permission_mode="acceptEdits",
+                max_turns=3,
+                max_thinking_tokens=8000
+            )
         
         # Analysis templates
         self.analysis_prompt_template = """
