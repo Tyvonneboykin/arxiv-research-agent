@@ -12,6 +12,20 @@ services:
       echo "📦 Installing Claude Code CLI..."
       npm install -g @anthropic-ai/claude-code
       echo "✅ Claude CLI installed: $(claude --version)"
+      echo "🔍 Discovering Claude CLI installation paths..."
+      echo "📍 which claude: $(which claude)"
+      echo "📍 npm bin -g: $(npm bin -g)"
+      echo "📍 ls npm global bin: $(ls -la $(npm bin -g) | grep claude || echo 'claude not found')"
+      echo "📍 NODE_PATH: $NODE_PATH"
+      echo "📍 NVM_DIR: $NVM_DIR"
+      echo "📍 Current PATH: $PATH"
+      echo "📍 All claude files: $(find /opt /home /root -name 'claude' -type f 2>/dev/null || echo 'none found')"
+      echo "💾 Saving CLI path for runtime..."
+      echo "$(which claude)" > claude_cli_path.txt
+      echo "$(npm bin -g)" > npm_global_bin.txt
+      echo "$(node --version)" > node_version.txt
+      echo "$PATH" > build_path.txt
+      echo "✅ CLI path saved: $(cat claude_cli_path.txt)"
       echo "📦 Installing Python dependencies..."
       pip install -r requirements.txt
       echo "🔍 Verifying Python setup..."
@@ -20,14 +34,90 @@ services:
       export PYTHONPATH="/opt/render/project:/opt/render/project/src:$PYTHONPATH"
       cd /opt/render/project
       echo "🚀 Starting ArXiv Research Agent with Claude Code SDK analysis..."
-      # Ensure NVM and Node environment is available
-      export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-      nvm use 20
-      # Add npm global bin to PATH for Claude CLI access
-      export PATH="$(npm bin -g):$PATH"
-      echo "🔧 Claude CLI available: $(which claude 2>/dev/null || echo 'Not found in PATH')"
-      echo "🔧 Node.js version: $(node --version)"
-      echo "🔧 npm global path: $(npm bin -g)"
+      
+      # Load saved build-time CLI path information
+      echo "📋 Loading saved CLI paths from build..."
+      if [ -f claude_cli_path.txt ]; then
+        SAVED_CLI_PATH="$(cat claude_cli_path.txt)"
+        echo "📍 Saved CLI path: $SAVED_CLI_PATH"
+      else
+        echo "⚠️ No saved CLI path found"
+        SAVED_CLI_PATH=""
+      fi
+      
+      if [ -f npm_global_bin.txt ]; then
+        SAVED_NPM_BIN="$(cat npm_global_bin.txt)"
+        echo "📍 Saved npm global bin: $SAVED_NPM_BIN"
+      else
+        echo "⚠️ No saved npm bin path found"
+        SAVED_NPM_BIN=""
+      fi
+      
+      # Enhanced Node.js environment setup
+      echo "🔧 Setting up Node.js environment..."
+      export NVM_DIR="$HOME/.nvm"
+      if [ -s "$NVM_DIR/nvm.sh" ]; then
+        \. "$NVM_DIR/nvm.sh"
+        nvm use 20 2>/dev/null || nvm use default 2>/dev/null || true
+        echo "✅ NVM loaded, Node version: $(node --version 2>/dev/null || echo 'Not available')"
+      else
+        echo "⚠️ NVM not available"
+      fi
+      
+      # Enhanced PATH setup with multiple fallbacks
+      if [ -n "$SAVED_NPM_BIN" ]; then
+        export PATH="$SAVED_NPM_BIN:$PATH"
+        echo "✅ Added saved npm bin to PATH: $SAVED_NPM_BIN"
+      fi
+      
+      # Try current npm bin as fallback
+      CURRENT_NPM_BIN="$(npm bin -g 2>/dev/null || echo '')"
+      if [ -n "$CURRENT_NPM_BIN" ] && [ "$CURRENT_NPM_BIN" != "$SAVED_NPM_BIN" ]; then
+        export PATH="$CURRENT_NPM_BIN:$PATH"
+        echo "✅ Added current npm bin to PATH: $CURRENT_NPM_BIN"
+      fi
+      
+      # Add common Claude CLI locations
+      export PATH="/opt/render/.nvm/versions/node/v20.18.0/bin:/root/.nvm/versions/node/v20.18.0/bin:$PATH"
+      
+      # Comprehensive CLI detection and environment setup
+      echo "🔍 Claude CLI detection results:"
+      echo "📍 which claude: $(which claude 2>/dev/null || echo 'Not found')"
+      echo "📍 Saved path exists: $(test -f "$SAVED_CLI_PATH" && echo 'Yes' || echo 'No')"
+      
+      # Set CLAUDE_CLI_PATH environment variable for the SDK
+      FINAL_CLI_PATH=""
+      if [ -n "$SAVED_CLI_PATH" ] && [ -f "$SAVED_CLI_PATH" ]; then
+        echo "📍 Using saved CLI executable: $SAVED_CLI_PATH"
+        export CLAUDE_CLI_PATH="$SAVED_CLI_PATH"
+        FINAL_CLI_PATH="$SAVED_CLI_PATH"
+      else
+        # Try current PATH lookup as fallback
+        CURRENT_CLI_PATH="$(which claude 2>/dev/null || echo '')"
+        if [ -n "$CURRENT_CLI_PATH" ]; then
+          echo "📍 Using current PATH CLI: $CURRENT_CLI_PATH"
+          export CLAUDE_CLI_PATH="$CURRENT_CLI_PATH"
+          FINAL_CLI_PATH="$CURRENT_CLI_PATH"
+        else
+          echo "⚠️ No Claude CLI found - analysis will fail"
+        fi
+      fi
+      
+      echo "📍 Final CLAUDE_CLI_PATH: $CLAUDE_CLI_PATH"
+      echo "📍 Current PATH: $PATH"
+      echo "📍 Node version: $(node --version 2>/dev/null || echo 'Not available')"
+      echo "📍 npm version: $(npm --version 2>/dev/null || echo 'Not available')"
+      
+      # Verify CLI is working before starting agent
+      if [ -n "$FINAL_CLI_PATH" ] && [ -f "$FINAL_CLI_PATH" ]; then
+        echo "🔧 Testing Claude CLI..."
+        if "$FINAL_CLI_PATH" --version >/dev/null 2>&1; then
+          echo "✅ Claude CLI is functional"
+        else
+          echo "❌ Claude CLI test failed"
+        fi
+      fi
+      
       # Start the agent
       python src/research_agent.py --once
     envVars:
