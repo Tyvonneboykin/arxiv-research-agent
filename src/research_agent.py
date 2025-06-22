@@ -428,6 +428,99 @@ async def main():
     print(f"Working directory: {os.getcwd()}")
     print(f"Python path: {sys.path[:3]}...")  # First 3 entries
     
+    # Environment debugging
+    print("")
+    print("====================================")
+    print("🐍 PYTHON ENVIRONMENT DEBUG")
+    print("====================================")
+    
+    # Critical environment variables
+    critical_env_vars = [
+        'ANTHROPIC_API_KEY',
+        'CLAUDE_CLI_PATH', 
+        'PATH',
+        'NVM_DIR',
+        'NODE_PATH',
+        'HOME',
+        'PWD'
+    ]
+    
+    print("🔍 Environment Variables:")
+    for var in critical_env_vars:
+        value = os.getenv(var, 'NOT SET')
+        if var == 'ANTHROPIC_API_KEY' and value != 'NOT SET':
+            # Mask API key for security
+            masked_value = f"{value[:8]}...{value[-4:]}" if len(value) > 12 else "***"
+            print(f"  - {var}: {masked_value}")
+        elif var == 'PATH':
+            # Show first few PATH entries for readability
+            paths = value.split(':')[:5] if value != 'NOT SET' else []
+            print(f"  - {var}: {':'.join(paths)}{'...' if len(paths) == 5 else ''}")
+        else:
+            print(f"  - {var}: {value}")
+    
+    # Build files verification
+    print("")
+    print("📁 Build Files Check:")
+    build_files = [
+        'build_summary.txt',
+        'cli_works.txt', 
+        'claude_cli_path.txt',
+        'npm_global_bin.txt',
+        'node_version.txt'
+    ]
+    
+    for file in build_files:
+        if os.path.exists(file):
+            try:
+                with open(file, 'r') as f:
+                    content = f.read().strip()
+                print(f"  - ✅ {file}: {content}")
+            except Exception as e:
+                print(f"  - ❌ {file}: Error reading - {e}")
+        else:
+            print(f"  - ❌ {file}: NOT FOUND")
+    
+    # Claude CLI detection from Python
+    print("")
+    print("🤖 Claude CLI Detection from Python:")
+    
+    # Method 1: Environment variable
+    claude_cli_path = os.getenv('CLAUDE_CLI_PATH')
+    if claude_cli_path:
+        print(f"  - CLAUDE_CLI_PATH env var: {claude_cli_path}")
+        if os.path.exists(claude_cli_path):
+            print(f"  - ✅ File exists: {claude_cli_path}")
+        else:
+            print(f"  - ❌ File missing: {claude_cli_path}")
+    else:
+        print("  - ❌ CLAUDE_CLI_PATH not set")
+    
+    # Method 2: PATH lookup
+    import shutil
+    cli_in_path = shutil.which('claude')
+    if cli_in_path:
+        print(f"  - ✅ Found in PATH: {cli_in_path}")
+    else:
+        print("  - ❌ Not found in PATH")
+    
+    # Method 3: Manual search
+    search_paths = [
+        '/opt/render/.nvm/versions/node/v20.18.0/bin/claude',
+        '/root/.nvm/versions/node/v20.18.0/bin/claude',
+        '/usr/local/bin/claude'
+    ]
+    
+    print("  - Manual search results:")
+    for path in search_paths:
+        if os.path.exists(path):
+            print(f"    ✅ Found: {path}")
+        else:
+            print(f"    ❌ Not found: {path}")
+    
+    print("====================================")
+    print("")
+
     # Test imports
     try:
         import claude_code_sdk

@@ -5,118 +5,307 @@ services:
     plan: starter
     rootDir: .
     buildCommand: |
-      echo "📦 Setting up mixed Python/Node.js environment..."
+      echo "======================================"
+      echo "🚀 COMPREHENSIVE BUILD DEBUG PROCESS"
+      echo "======================================"
+      
+      # Step 1: Environment baseline
+      echo "📋 STEP 1: Environment Baseline"
+      echo "🏠 HOME: $HOME"
+      echo "📁 PWD: $(pwd)"
+      echo "👤 USER: $(whoami)"
+      echo "🖥️ OS: $(uname -a)"
+      echo "📍 Initial PATH: $PATH"
+      echo ""
+      
+      # Step 2: NVM Setup with detailed logging
+      echo "📋 STEP 2: Node.js/NVM Setup"
+      echo "📥 Downloading NVM..."
       curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-      export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      echo "🔧 Loading NVM..."
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      echo "✅ NVM loaded, available versions: $(nvm list-remote | tail -5)"
+      echo "📦 Installing Node.js 20..."
       nvm install 20 && nvm use 20
-      echo "📦 Installing Claude Code CLI..."
+      echo "✅ Node.js setup complete:"
+      echo "  - Node version: $(node --version)"
+      echo "  - npm version: $(npm --version)"
+      echo "  - NVM DIR: $NVM_DIR"
+      echo "  - Current PATH: $PATH"
+      echo ""
+      
+      # Step 3: Claude CLI Installation with extreme logging
+      echo "📋 STEP 3: Claude CLI Installation"
+      echo "📦 Installing @anthropic-ai/claude-code globally..."
       npm install -g @anthropic-ai/claude-code
-      echo "✅ Claude CLI installed: $(claude --version)"
-      echo "🔍 Discovering Claude CLI installation paths..."
-      echo "📍 which claude: $(which claude)"
-      echo "📍 npm bin -g: $(npm bin -g)"
-      echo "📍 ls npm global bin: $(ls -la $(npm bin -g) | grep claude || echo 'claude not found')"
-      echo "📍 NODE_PATH: $NODE_PATH"
-      echo "📍 NVM_DIR: $NVM_DIR"
-      echo "📍 Current PATH: $PATH"
-      echo "📍 All claude files: $(find /opt /home /root -name 'claude' -type f 2>/dev/null || echo 'none found')"
-      echo "💾 Saving CLI path for runtime..."
-      echo "$(which claude)" > claude_cli_path.txt
-      echo "$(npm bin -g)" > npm_global_bin.txt
+      INSTALL_EXIT_CODE=$?
+      echo "📊 npm install exit code: $INSTALL_EXIT_CODE"
+      
+      echo "🔍 Post-installation discovery:"
+      echo "  - which claude: $(which claude || echo 'NOT FOUND')"
+      echo "  - npm bin -g: $(npm bin -g || echo 'FAILED')"
+      echo "  - npm list -g claude-code: $(npm list -g @anthropic-ai/claude-code || echo 'NOT LISTED')"
+      
+      # Test CLI immediately after installation
+      echo "🧪 Testing Claude CLI immediately:"
+      if claude --version >/dev/null 2>&1; then
+        echo "✅ Claude CLI test SUCCESS: $(claude --version)"
+        CLI_WORKS="true"
+        CLI_PATH="$(which claude)"
+        CLI_VERSION="$(claude --version)"
+      else
+        echo "❌ Claude CLI test FAILED"
+        CLI_WORKS="false"
+        CLI_PATH=""
+        CLI_VERSION=""
+      fi
+      echo ""
+      
+      # Step 4: Comprehensive environment mapping
+      echo "📋 STEP 4: Environment Mapping"
+      echo "🔍 npm global bin contents:"
+      NPM_BIN="$(npm bin -g || echo '')"
+      if [ -n "$NPM_BIN" ]; then
+        echo "  - npm bin -g path: $NPM_BIN"
+        echo "  - Contents: $(ls -la "$NPM_BIN" || echo 'DIRECTORY NOT ACCESSIBLE')"
+        echo "  - Claude files: $(ls -la "$NPM_BIN" | grep claude || echo 'NO CLAUDE FILES')"
+      else
+        echo "  - npm bin -g: FAILED"
+      fi
+      
+      echo "🔍 Find all claude executables:"
+      find /opt /home /root /usr -name 'claude' -type f 2>/dev/null | while read file; do
+        echo "  - Found: $file ($(ls -la "$file"))"
+      done || echo "  - No claude files found"
+      echo ""
+      
+      # Step 5: Create comprehensive runtime info files
+      echo "📋 STEP 5: Creating Runtime Info Files"
+      
+      # Create build success indicator
+      echo "✅ BUILD_SUCCESS" > build_status.txt
+      echo "$(date)" > build_timestamp.txt
+      
+      # Save all critical paths and info
+      echo "$CLI_WORKS" > cli_works.txt
+      echo "$CLI_PATH" > claude_cli_path.txt
+      echo "$CLI_VERSION" > claude_version.txt
+      echo "$NPM_BIN" > npm_global_bin.txt
       echo "$(node --version)" > node_version.txt
       echo "$PATH" > build_path.txt
-      echo "✅ CLI path saved: $(cat claude_cli_path.txt)"
-      echo "📦 Installing Python dependencies..."
+      echo "$NVM_DIR" > nvm_dir.txt
+      
+      # Create verification summary
+      cat > build_summary.txt << EOF
+BUILD SUMMARY
+=============
+Date: $(date)
+CLI Works: $CLI_WORKS
+CLI Path: $CLI_PATH
+CLI Version: $CLI_VERSION
+NPM Global Bin: $NPM_BIN
+Node Version: $(node --version)
+NVM Dir: $NVM_DIR
+Build PATH: $PATH
+EOF
+      
+      echo "💾 Runtime files created:"
+      ls -la *.txt
+      echo "📄 Build summary:"
+      cat build_summary.txt
+      echo ""
+      
+      # Step 6: Python setup
+      echo "📋 STEP 6: Python Dependencies"
       pip install -r requirements.txt
-      echo "🔍 Verifying Python setup..."
       python setup.py --verify
+      
+      echo "======================================"
+      echo "🎉 BUILD PROCESS COMPLETE"
+      echo "======================================"
     startCommand: |
+      echo "======================================"
+      echo "🚀 RUNTIME ENVIRONMENT DEBUG"
+      echo "======================================"
+      
       export PYTHONPATH="/opt/render/project:/opt/render/project/src:$PYTHONPATH"
       cd /opt/render/project
-      echo "🚀 Starting ArXiv Research Agent with Claude Code SDK analysis..."
       
-      # Load saved build-time CLI path information
-      echo "📋 Loading saved CLI paths from build..."
+      # Step 1: Runtime environment baseline
+      echo "📋 STEP 1: Runtime Environment Baseline"
+      echo "🏠 HOME: $HOME"
+      echo "📁 PWD: $(pwd)"
+      echo "👤 USER: $(whoami)"
+      echo "📍 Current PATH: $PATH"
+      echo ""
+      
+      # Step 2: Build files verification
+      echo "📋 STEP 2: Build Files Verification"
+      echo "📁 Available files in project root:"
+      ls -la *.txt 2>/dev/null || echo "  - No .txt files found"
+      
+      if [ -f build_summary.txt ]; then
+        echo "📄 Build Summary:"
+        cat build_summary.txt
+      else
+        echo "❌ No build_summary.txt found - build may have failed"
+      fi
+      echo ""
+      
+      # Step 3: Load saved build information
+      echo "📋 STEP 3: Loading Build Information"
+      
+      # Check if CLI worked during build
+      if [ -f cli_works.txt ]; then
+        CLI_WORKED_IN_BUILD="$(cat cli_works.txt)"
+        echo "🔧 CLI worked in build: $CLI_WORKED_IN_BUILD"
+      else
+        CLI_WORKED_IN_BUILD="unknown"
+        echo "⚠️ No cli_works.txt file"
+      fi
+      
+      # Load saved paths
+      SAVED_CLI_PATH=""
+      SAVED_NPM_BIN=""
+      SAVED_NVM_DIR=""
+      SAVED_BUILD_PATH=""
+      
       if [ -f claude_cli_path.txt ]; then
         SAVED_CLI_PATH="$(cat claude_cli_path.txt)"
-        echo "📍 Saved CLI path: $SAVED_CLI_PATH"
+        echo "📍 Saved CLI path: '$SAVED_CLI_PATH'"
       else
-        echo "⚠️ No saved CLI path found"
-        SAVED_CLI_PATH=""
+        echo "⚠️ No claude_cli_path.txt file"
       fi
       
       if [ -f npm_global_bin.txt ]; then
         SAVED_NPM_BIN="$(cat npm_global_bin.txt)"
-        echo "📍 Saved npm global bin: $SAVED_NPM_BIN"
+        echo "📍 Saved npm bin: '$SAVED_NPM_BIN'"
       else
-        echo "⚠️ No saved npm bin path found"
-        SAVED_NPM_BIN=""
+        echo "⚠️ No npm_global_bin.txt file"
       fi
       
-      # Enhanced Node.js environment setup
-      echo "🔧 Setting up Node.js environment..."
-      export NVM_DIR="$HOME/.nvm"
-      if [ -s "$NVM_DIR/nvm.sh" ]; then
+      if [ -f nvm_dir.txt ]; then
+        SAVED_NVM_DIR="$(cat nvm_dir.txt)"
+        echo "📍 Saved NVM dir: '$SAVED_NVM_DIR'"
+      else
+        echo "⚠️ No nvm_dir.txt file"
+      fi
+      
+      if [ -f build_path.txt ]; then
+        SAVED_BUILD_PATH="$(cat build_path.txt)"
+        echo "📍 Saved build PATH: '$SAVED_BUILD_PATH'"
+      else
+        echo "⚠️ No build_path.txt file"
+      fi
+      echo ""
+      
+      # Step 4: Current runtime environment setup
+      echo "📋 STEP 4: Runtime Environment Setup"
+      
+      # Try to recreate Node.js environment
+      if [ -n "$SAVED_NVM_DIR" ] && [ -s "$SAVED_NVM_DIR/nvm.sh" ]; then
+        export NVM_DIR="$SAVED_NVM_DIR"
         \. "$NVM_DIR/nvm.sh"
         nvm use 20 2>/dev/null || nvm use default 2>/dev/null || true
-        echo "✅ NVM loaded, Node version: $(node --version 2>/dev/null || echo 'Not available')"
+        echo "✅ NVM loaded from saved dir: $(node --version 2>/dev/null || echo 'FAILED')"
       else
-        echo "⚠️ NVM not available"
+        echo "⚠️ Could not load NVM from saved dir"
+        # Fallback to default location
+        export NVM_DIR="$HOME/.nvm"
+        if [ -s "$NVM_DIR/nvm.sh" ]; then
+          \. "$NVM_DIR/nvm.sh"
+          nvm use 20 2>/dev/null || nvm use default 2>/dev/null || true
+          echo "✅ NVM loaded from default: $(node --version 2>/dev/null || echo 'FAILED')"
+        else
+          echo "❌ NVM not available at runtime"
+        fi
       fi
       
-      # Enhanced PATH setup with multiple fallbacks
+      # Reconstruct PATH with saved npm bin
       if [ -n "$SAVED_NPM_BIN" ]; then
         export PATH="$SAVED_NPM_BIN:$PATH"
         echo "✅ Added saved npm bin to PATH: $SAVED_NPM_BIN"
       fi
       
-      # Try current npm bin as fallback
+      # Try current npm bin as well
       CURRENT_NPM_BIN="$(npm bin -g 2>/dev/null || echo '')"
       if [ -n "$CURRENT_NPM_BIN" ] && [ "$CURRENT_NPM_BIN" != "$SAVED_NPM_BIN" ]; then
         export PATH="$CURRENT_NPM_BIN:$PATH"
         echo "✅ Added current npm bin to PATH: $CURRENT_NPM_BIN"
       fi
+      echo ""
       
-      # Add common Claude CLI locations
-      export PATH="/opt/render/.nvm/versions/node/v20.18.0/bin:/root/.nvm/versions/node/v20.18.0/bin:$PATH"
+      # Step 5: CLI Detection and Testing
+      echo "📋 STEP 5: CLI Detection and Testing"
       
-      # Comprehensive CLI detection and environment setup
-      echo "🔍 Claude CLI detection results:"
-      echo "📍 which claude: $(which claude 2>/dev/null || echo 'Not found')"
-      echo "📍 Saved path exists: $(test -f "$SAVED_CLI_PATH" && echo 'Yes' || echo 'No')"
-      
-      # Set CLAUDE_CLI_PATH environment variable for the SDK
+      # Method 1: Use saved CLI path
       FINAL_CLI_PATH=""
       if [ -n "$SAVED_CLI_PATH" ] && [ -f "$SAVED_CLI_PATH" ]; then
-        echo "📍 Using saved CLI executable: $SAVED_CLI_PATH"
-        export CLAUDE_CLI_PATH="$SAVED_CLI_PATH"
-        FINAL_CLI_PATH="$SAVED_CLI_PATH"
+        echo "✅ Saved CLI path exists: $SAVED_CLI_PATH"
+        if "$SAVED_CLI_PATH" --version >/dev/null 2>&1; then
+          echo "✅ Saved CLI path works: $("$SAVED_CLI_PATH" --version)"
+          FINAL_CLI_PATH="$SAVED_CLI_PATH"
+        else
+          echo "❌ Saved CLI path not executable"
+        fi
       else
-        # Try current PATH lookup as fallback
-        CURRENT_CLI_PATH="$(which claude 2>/dev/null || echo '')"
-        if [ -n "$CURRENT_CLI_PATH" ]; then
-          echo "📍 Using current PATH CLI: $CURRENT_CLI_PATH"
-          export CLAUDE_CLI_PATH="$CURRENT_CLI_PATH"
-          FINAL_CLI_PATH="$CURRENT_CLI_PATH"
+        echo "❌ Saved CLI path not available"
+      fi
+      
+      # Method 2: Current PATH lookup
+      if [ -z "$FINAL_CLI_PATH" ]; then
+        CURRENT_CLI="$(which claude 2>/dev/null || echo '')"
+        if [ -n "$CURRENT_CLI" ]; then
+          echo "✅ Found CLI in current PATH: $CURRENT_CLI"
+          if "$CURRENT_CLI" --version >/dev/null 2>&1; then
+            echo "✅ Current CLI works: $("$CURRENT_CLI" --version)"
+            FINAL_CLI_PATH="$CURRENT_CLI"
+          else
+            echo "❌ Current CLI not executable"
+          fi
         else
-          echo "⚠️ No Claude CLI found - analysis will fail"
+          echo "❌ No CLI found in current PATH"
         fi
       fi
       
-      echo "📍 Final CLAUDE_CLI_PATH: $CLAUDE_CLI_PATH"
-      echo "📍 Current PATH: $PATH"
-      echo "📍 Node version: $(node --version 2>/dev/null || echo 'Not available')"
-      echo "📍 npm version: $(npm --version 2>/dev/null || echo 'Not available')"
-      
-      # Verify CLI is working before starting agent
-      if [ -n "$FINAL_CLI_PATH" ] && [ -f "$FINAL_CLI_PATH" ]; then
-        echo "🔧 Testing Claude CLI..."
-        if "$FINAL_CLI_PATH" --version >/dev/null 2>&1; then
-          echo "✅ Claude CLI is functional"
-        else
-          echo "❌ Claude CLI test failed"
-        fi
+      # Method 3: Manual search
+      if [ -z "$FINAL_CLI_PATH" ]; then
+        echo "🔍 Searching for claude executable manually..."
+        for search_path in "$SAVED_NPM_BIN/claude" "$CURRENT_NPM_BIN/claude" "/opt/render/.nvm/versions/node/v20.18.0/bin/claude" "/root/.nvm/versions/node/v20.18.0/bin/claude"; do
+          if [ -f "$search_path" ]; then
+            echo "  - Found: $search_path"
+            if "$search_path" --version >/dev/null 2>&1; then
+              echo "  - ✅ Works: $("$search_path" --version)"
+              FINAL_CLI_PATH="$search_path"
+              break
+            else
+              echo "  - ❌ Not executable"
+            fi
+          fi
+        done
       fi
+      
+      # Set environment variable for SDK
+      if [ -n "$FINAL_CLI_PATH" ]; then
+        export CLAUDE_CLI_PATH="$FINAL_CLI_PATH"
+        echo "✅ Final CLAUDE_CLI_PATH: $CLAUDE_CLI_PATH"
+      else
+        echo "❌ No working Claude CLI found"
+      fi
+      echo ""
+      
+      # Step 6: Environment summary
+      echo "📋 STEP 6: Environment Summary"
+      echo "🔧 Node.js: $(node --version 2>/dev/null || echo 'NOT AVAILABLE')"
+      echo "📦 npm: $(npm --version 2>/dev/null || echo 'NOT AVAILABLE')"
+      echo "🤖 Claude CLI: ${CLAUDE_CLI_PATH:-'NOT FOUND'}"
+      echo "📍 Final PATH: $PATH"
+      echo ""
+      
+      echo "======================================"
+      echo "🚀 STARTING ARXIV RESEARCH AGENT"
+      echo "======================================"
       
       # Start the agent
       python src/research_agent.py --once
