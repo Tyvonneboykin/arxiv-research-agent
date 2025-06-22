@@ -3,11 +3,45 @@
 
 # Research interests and filtering
 research:
-  # Primary research areas to focus on
+  # Primary research areas to focus on - Comprehensive AI Advancement Tracking
   interests:
-    - "language model"
+    # Foundation Models & LLMs
+    - "large language model"
+    - "foundation model"
+    - "transformer"
+    - "attention mechanism"
+    
+    # Generative AI & Multimodal
+    - "generative AI"
+    - "diffusion model"
+    - "multimodal"
+    - "text-to-image"
+    - "vision-language"
+    
+    # Core AI/ML
     - "neural network"
-    - "AI"
+    - "deep learning"
+    - "machine learning"
+    - "reinforcement learning"
+    
+    # AI Safety & Alignment
+    - "AI alignment"
+    - "AI safety"
+    - "interpretability"
+    - "explainable AI"
+    
+    # Advanced Topics
+    - "artificial general intelligence"
+    - "few-shot learning"
+    - "prompt engineering"
+    - "fine-tuning"
+    - "transfer learning"
+    
+    # Applications
+    - "computer vision"
+    - "natural language processing"
+    - "robotics"
+    - "autonomous"
   
   # arXiv categories to monitor
   arxiv_categories:
@@ -18,8 +52,9 @@ research:
     - "cs.RO"    # Robotics
     - "stat.ML"  # Machine Learning (Statistics)
   
-  # Keywords to boost relevance
+  # Keywords to boost relevance - Enhanced for AI Advancement
   boost_keywords:
+    # Performance & Innovation
     - "breakthrough"
     - "state-of-the-art"
     - "novel"
@@ -27,6 +62,26 @@ research:
     - "outperforms"
     - "first"
     - "new method"
+    - "unprecedented"
+    - "record-breaking"
+    - "superior performance"
+    
+    # AI Advancement Indicators
+    - "emergent"
+    - "scaling law"
+    - "zero-shot"
+    - "in-context learning"
+    - "self-supervised"
+    - "foundation"
+    - "general-purpose"
+    - "unified"
+    - "end-to-end"
+    
+    # Research Quality
+    - "empirical"
+    - "comprehensive"
+    - "systematic"
+    - "rigorous"
   
   # Keywords to filter out (lower priority)
   exclude_keywords:
@@ -37,7 +92,7 @@ research:
   # Filtering criteria
   filters:
     max_papers_per_day: 50
-    days_back: 3  # How many days to look back
+    days_back: 7  # How many days to look back (increased for more comprehensive coverage)
     min_relevance_score: 0.3
     min_significance_score: 0.4
 
