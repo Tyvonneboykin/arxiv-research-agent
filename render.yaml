@@ -9,6 +9,7 @@ services:
     startCommand: |
       export PYTHONPATH="/opt/render/project:/opt/render/project/src:$PYTHONPATH"
       cd /opt/render/project
+      echo "🚀 Starting ArXiv Research Agent with direct execution..."
       python src/research_agent.py --once
     envVars:
       - key: ANTHROPIC_API_KEY
