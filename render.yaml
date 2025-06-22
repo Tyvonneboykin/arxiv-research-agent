@@ -7,18 +7,13 @@ services:
     buildCommand: |
       echo "📦 Installing Python dependencies..."
       pip install -r requirements.txt
-      echo "📦 Installing Node.js and Claude Code CLI..."
-      curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
-      sudo apt-get install -y nodejs
-      npm install -g @anthropic-ai/claude-code
-      echo "✅ Claude Code CLI installed: $(claude --version)"
       echo "🔍 Verifying Python setup..."
       python setup.py --verify
     startCommand: |
       export PYTHONPATH="/opt/render/project:/opt/render/project/src:$PYTHONPATH"
       cd /opt/render/project
-      echo "🚀 Starting ArXiv Research Agent with Claude Code analysis..."
-      echo "🔧 Claude CLI available: $(which claude)"
+      echo "🚀 Starting ArXiv Research Agent with Claude API analysis..."
+      echo "🔧 Using Anthropic API directly for paper analysis"
       python src/research_agent.py --once
     envVars:
       - key: ANTHROPIC_API_KEY

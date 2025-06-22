@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Claude Code SDK Paper Analyzer
-==============================
+Claude API Paper Analyzer
+==========================
 
-Uses Claude Code SDK to intelligently analyze and summarize research papers.
+Uses Claude API directly to intelligently analyze and summarize research papers.
 """
 
 import asyncio
@@ -16,9 +16,9 @@ from typing import List, Dict, Any, Optional, Tuple
 from dataclasses import dataclass
 
 try:
-    from claude_code_sdk import query, ClaudeCodeOptions
+    import anthropic
 except ImportError:
-    print("Error: claude-code-sdk not installed. Run: pip install claude-code-sdk")
+    print("Error: anthropic not installed. Run: pip install anthropic")
     sys.exit(1)
 
 from arxiv_fetcher import ArxivPaper
@@ -67,13 +67,12 @@ class ClaudeAnalyzer:
         self.working_dir = working_dir or os.getcwd()
         self.logger = logging.getLogger(__name__)
         
-        # Configure Claude options
-        self.claude_options = ClaudeCodeOptions(
-            cwd=self.working_dir,
-            permission_mode="acceptEdits",
-            max_turns=3,
-            max_thinking_tokens=8000
-        )
+        # Initialize Anthropic client
+        api_key = os.getenv('ANTHROPIC_API_KEY')
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is required")
+        
+        self.client = anthropic.Anthropic(api_key=api_key)
         
         # Analysis templates
         self.analysis_prompt_template = """
@@ -148,23 +147,27 @@ Format your response as structured analysis focusing on actionable insights for 
             
             self.logger.info(f"Analyzing paper: {paper.title[:50]}...")
             
-            # Query Claude
-            responses = []
-            async for message in query(prompt=prompt, options=self.claude_options):
-                if hasattr(message, 'content'):
-                    if isinstance(message.content, str):
-                        responses.append(message.content)
-                    elif hasattr(message.content, '__iter__'):
-                        for block in message.content:
-                            if hasattr(block, 'text'):
-                                responses.append(block.text)
+            # Query Claude via API
+            message = self.client.messages.create(
+                model="claude-3-sonnet-20240229",
+                max_tokens=4000,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ]
+            )
             
-            if not responses:
+            if not message.content:
                 self.logger.error(f"No response from Claude for paper {paper.id}")
                 return None
             
-            # Parse the JSON response
-            full_response = " ".join(responses)
+            # Extract text response
+            full_response = ""
+            for content_block in message.content:
+                if hasattr(content_block, 'text'):
+                    full_response += content_block.text
             
             # Extract JSON from response
             json_start = full_response.find('{')
