@@ -69,7 +69,7 @@ def test_critical_imports():
     logger.info("🔍 Testing critical imports...")
     
     imports_to_test = [
-        ('anthropic', 'Anthropic API'),
+        ('claude_code_sdk', 'Claude Code SDK'),
         ('arxiv', 'ArXiv API'),
         ('yaml', 'PyYAML'),
         ('schedule', 'Schedule'),
