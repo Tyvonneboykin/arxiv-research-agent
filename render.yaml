@@ -1,0 +1,28 @@
+services:
+  - type: background_worker
+    name: arxiv-research-agent
+    env: python
+    plan: starter
+    buildCommand: |
+      pip install -r requirements.txt
+      python setup.py --verify
+    startCommand: |
+      export PYTHONPATH="/opt/render/project:/opt/render/project/src:$PYTHONPATH"
+      cd /opt/render/project
+      python src/research_agent.py --once
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: ARXIV_AGENT_EMAIL_USERNAME
+        value: donvon@vonbase.com
+      - key: ARXIV_AGENT_EMAIL_FROM
+        value: donvon@vonbase.com
+      - key: ARXIV_AGENT_LOG_LEVEL
+        value: INFO
+      - key: ARXIV_OUTPUT_PATH
+        value: /tmp/arxiv_output
+      - key: RENDER_SERVICE_TYPE
+        value: background_worker
+    healthCheckPath: /health
+    region: oregon
+    autoDeploy: true
