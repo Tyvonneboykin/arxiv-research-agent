@@ -5,6 +5,13 @@ services:
     plan: starter
     rootDir: .
     buildCommand: |
+      echo "📦 Setting up mixed Python/Node.js environment..."
+      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+      export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      nvm install 20 && nvm use 20
+      echo "📦 Installing Claude Code CLI..."
+      npm install -g @anthropic-ai/claude-code
+      echo "✅ Claude CLI installed: $(claude --version)"
       echo "📦 Installing Python dependencies..."
       pip install -r requirements.txt
       echo "🔍 Verifying Python setup..."
@@ -12,8 +19,9 @@ services:
     startCommand: |
       export PYTHONPATH="/opt/render/project:/opt/render/project/src:$PYTHONPATH"
       cd /opt/render/project
-      echo "🚀 Starting ArXiv Research Agent with Claude API analysis..."
-      echo "🔧 Using Anthropic API directly for paper analysis"
+      echo "🚀 Starting ArXiv Research Agent with Claude Code SDK analysis..."
+      echo "🔧 Claude CLI available: $(which claude 2>/dev/null || echo 'Not found')"
+      export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
       python src/research_agent.py --once
     envVars:
       - key: ANTHROPIC_API_KEY
