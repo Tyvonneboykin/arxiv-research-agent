@@ -121,10 +121,18 @@ EOF
       pip install -r requirements.txt
       python setup.py --verify
       
+      # BUILD VERIFICATION MARKER
+      echo "BUILD_VERIFICATION_$(date)" > build_marker.txt
+      echo "🚨 BUILD MARKER CREATED: $(cat build_marker.txt)"
+      
       echo "======================================"
       echo "🎉 BUILD PROCESS COMPLETE"
       echo "======================================"
     startCommand: |
+      # DEPLOYMENT VERIFICATION MARKER
+      echo "DEPLOYMENT_VERIFICATION_$(date)" > deployment_marker.txt
+      echo "🚨 DEPLOYMENT MARKER CREATED: $(cat deployment_marker.txt)"
+      
       echo "======================================"
       echo "🚀 RUNTIME ENVIRONMENT DEBUG"
       echo "======================================"

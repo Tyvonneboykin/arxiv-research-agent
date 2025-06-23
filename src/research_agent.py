@@ -428,6 +428,35 @@ async def main():
     print(f"Working directory: {os.getcwd()}")
     print(f"Python path: {sys.path[:3]}...")  # First 3 entries
     
+    # DEPLOYMENT VERIFICATION CHECK
+    print("")
+    print("🚨 DEPLOYMENT VERIFICATION CHECK")
+    print("=" * 40)
+    
+    deployment_files = ['deployment_marker.txt', 'build_marker.txt']
+    deployment_ok = True
+    
+    for file in deployment_files:
+        if os.path.exists(file):
+            try:
+                with open(file, 'r') as f:
+                    content = f.read().strip()
+                print(f"✅ {file}: {content}")
+            except Exception as e:
+                print(f"❌ {file}: Error reading - {e}")
+                deployment_ok = False
+        else:
+            print(f"❌ {file}: NOT FOUND")
+            deployment_ok = False
+    
+    if not deployment_ok:
+        print("❌ DEPLOYMENT ISSUE: Enhanced debugging may not be running")
+    else:
+        print("✅ DEPLOYMENT VERIFIED: Enhanced debugging is active")
+    
+    print("=" * 40)
+    print("")
+
     # Environment debugging
     print("")
     print("====================================")

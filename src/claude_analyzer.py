@@ -67,56 +67,105 @@ class ClaudeAnalyzer:
         self.working_dir = working_dir or os.getcwd()
         self.logger = logging.getLogger(__name__)
         
-        # Configure Claude options with CLI path detection for Render deployment
-        cli_path = None
+        # ROBUST CLI DETECTION AND PATH MODIFICATION FOR RENDER DEPLOYMENT
+        self.logger.info("🔍 Starting robust Claude CLI detection...")
         
-        # Method 1: Check for saved CLI path from build process
+        # Step 1: Comprehensive CLI detection
+        cli_path = None
+        detection_methods = []
+        
+        # Method 1: Environment variable (highest priority)
         saved_cli_path = os.getenv("CLAUDE_CLI_PATH")
         if saved_cli_path and os.path.isfile(saved_cli_path):
             cli_path = saved_cli_path
-            self.logger.info(f"✅ Using saved Claude CLI path: {cli_path}")
-        else:
-            # Method 2: Try to find Claude CLI in PATH
-            import shutil
-            cli_path = shutil.which("claude")
-            if cli_path:
-                self.logger.info(f"✅ Found Claude CLI in PATH: {cli_path}")
-            else:
-                # Method 3: Check common Render locations
-                potential_paths = [
-                    "/opt/render/.nvm/versions/node/v20.18.0/bin/claude",
-                    "/opt/render/.nvm/versions/node/v20.17.0/bin/claude", 
-                    "/opt/render/.nvm/versions/node/v20.16.0/bin/claude",
-                    "/usr/local/bin/claude",
-                    "/root/.nvm/versions/node/v20.18.0/bin/claude",
-                    "/home/render/.nvm/versions/node/v20.18.0/bin/claude"
-                ]
-                
-                for path in potential_paths:
-                    if os.path.exists(path):
-                        cli_path = path
-                        self.logger.info(f"✅ Found Claude CLI at fallback location: {cli_path}")
-                        break
+            detection_methods.append(f"CLAUDE_CLI_PATH env var: {cli_path}")
         
-        # Set the CLAUDE_CLI_PATH environment variable if we found the CLI
+        # Method 2: Current PATH lookup
+        if not cli_path:
+            import shutil
+            path_cli = shutil.which("claude")
+            if path_cli:
+                cli_path = path_cli
+                detection_methods.append(f"PATH lookup: {cli_path}")
+        
+        # Method 3: Saved build files
+        if not cli_path and os.path.exists("claude_cli_path.txt"):
+            try:
+                with open("claude_cli_path.txt", "r") as f:
+                    saved_path = f.read().strip()
+                if saved_path and os.path.isfile(saved_path):
+                    cli_path = saved_path
+                    detection_methods.append(f"Build file: {cli_path}")
+            except Exception as e:
+                self.logger.warning(f"⚠️ Error reading build file: {e}")
+        
+        # Method 4: Common Render locations
+        if not cli_path:
+            potential_paths = [
+                "/opt/render/.nvm/versions/node/v20.18.0/bin/claude",
+                "/opt/render/.nvm/versions/node/v20.17.0/bin/claude", 
+                "/opt/render/.nvm/versions/node/v20.16.0/bin/claude",
+                "/usr/local/bin/claude",
+                "/root/.nvm/versions/node/v20.18.0/bin/claude",
+                "/home/render/.nvm/versions/node/v20.18.0/bin/claude"
+            ]
+            
+            for path in potential_paths:
+                if os.path.exists(path) and os.access(path, os.X_OK):
+                    cli_path = path
+                    detection_methods.append(f"Fallback search: {cli_path}")
+                    break
+        
+        # Step 2: CLI validation and PATH modification
         if cli_path:
-            os.environ["CLAUDE_CLI_PATH"] = cli_path
-            self.logger.info(f"✅ Set CLAUDE_CLI_PATH environment variable: {cli_path}")
+            self.logger.info(f"✅ Claude CLI detected via: {'; '.join(detection_methods)}")
             
             # Verify CLI is executable
             try:
                 import subprocess
                 result = subprocess.run([cli_path, "--version"], capture_output=True, text=True, timeout=10)
                 if result.returncode == 0:
-                    self.logger.info(f"✅ Claude CLI version verified: {result.stdout.strip()}")
+                    version = result.stdout.strip()
+                    self.logger.info(f"✅ Claude CLI version verified: {version}")
+                    
+                    # CRITICAL: Modify PATH to ensure CLI is accessible
+                    cli_dir = os.path.dirname(cli_path)
+                    current_path = os.getenv("PATH", "")
+                    if cli_dir not in current_path:
+                        new_path = f"{cli_dir}:{current_path}"
+                        os.environ["PATH"] = new_path
+                        self.logger.info(f"✅ Added CLI directory to PATH: {cli_dir}")
+                    
+                    # Set environment variables for SDK
+                    os.environ["CLAUDE_CLI_PATH"] = cli_path
+                    self.logger.info(f"✅ Set CLAUDE_CLI_PATH: {cli_path}")
+                    
+                    # Final verification - can we call 'claude' directly?
+                    import shutil
+                    final_check = shutil.which("claude")
+                    if final_check:
+                        self.logger.info(f"✅ Final verification: 'claude' command accessible at {final_check}")
+                    else:
+                        self.logger.warning(f"⚠️ 'claude' command still not in PATH after modification")
+                        
                 else:
-                    self.logger.warning(f"⚠️ Claude CLI version check failed: {result.stderr}")
+                    self.logger.error(f"❌ Claude CLI not executable: {result.stderr}")
+                    cli_path = None
+                    
             except Exception as e:
-                self.logger.warning(f"⚠️ Error verifying Claude CLI: {e}")
-        else:
-            self.logger.error("❌ Claude CLI not found - paper analysis will fail")
+                self.logger.error(f"❌ Error verifying Claude CLI: {e}")
+                cli_path = None
         
-        # Create Claude options (SDK will use CLAUDE_CLI_PATH environment variable)
+        # Step 3: Create Claude options
+        if cli_path:
+            self.logger.info(f"✅ Claude CLI ready for SDK use")
+        else:
+            self.logger.error("❌ Claude CLI not accessible - paper analysis will fail")
+            # Log detection attempts for debugging
+            self.logger.error("Detection attempts:")
+            for method in detection_methods:
+                self.logger.error(f"  - {method}")
+        
         self.claude_options = ClaudeCodeOptions(
             cwd=self.working_dir,
             permission_mode="acceptEdits",
