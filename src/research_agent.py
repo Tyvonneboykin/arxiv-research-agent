@@ -25,6 +25,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 try:
     from arxiv_fetcher import ArxivFetcher, ArxivPaper
     from claude_analyzer import ClaudeAnalyzer, PaperAnalysis
+    from claude_analyzer_direct import DirectClaudeAnalyzer
     from digest_generator import DigestGenerator
     from config_manager import ConfigManager
     from cache_manager import CacheManager
@@ -34,6 +35,7 @@ except ImportError as e:
     try:
         from src.arxiv_fetcher import ArxivFetcher, ArxivPaper
         from src.claude_analyzer import ClaudeAnalyzer, PaperAnalysis
+        from src.claude_analyzer_direct import DirectClaudeAnalyzer
         from src.digest_generator import DigestGenerator
         from src.config_manager import ConfigManager
         from src.cache_manager import CacheManager
@@ -122,10 +124,42 @@ class ResearchAgent:
                 ttl_hours=cache_config.ttl_hours
             )
             
-            # Initialize Claude analyzer
+            # Initialize Claude analyzer with CLI + Direct API fallback
             claude_config = self.config.get_claude_config()
             working_dir = claude_config.working_directory or str(Path.cwd())
-            self.claude_analyzer = ClaudeAnalyzer(working_dir)
+            
+            self.logger.info("🔧 Initializing Claude analyzer with fallback strategy...")
+            
+            # Strategy 1: Try CLI-based analyzer first
+            cli_analyzer = None
+            try:
+                cli_analyzer = ClaudeAnalyzer(working_dir)
+                self.logger.info("✅ CLI-based Claude analyzer initialized")
+            except Exception as e:
+                self.logger.warning(f"⚠️ CLI-based analyzer failed: {e}")
+            
+            # Strategy 2: Initialize direct API analyzer as fallback
+            direct_analyzer = None
+            try:
+                direct_analyzer = DirectClaudeAnalyzer(working_dir)
+                self.logger.info("✅ Direct API Claude analyzer initialized")
+            except Exception as e:
+                self.logger.warning(f"⚠️ Direct API analyzer failed: {e}")
+            
+            # Choose analyzer based on availability
+            if cli_analyzer:
+                self.claude_analyzer = cli_analyzer
+                self.analyzer_type = "CLI"
+                self.logger.info("🎯 Using CLI-based Claude analyzer")
+            elif direct_analyzer:
+                self.claude_analyzer = direct_analyzer
+                self.analyzer_type = "DirectAPI"
+                self.logger.info("🎯 Using Direct API Claude analyzer as fallback")
+            else:
+                raise Exception("❌ Both CLI and Direct API analyzers failed to initialize")
+            
+            # Store fallback analyzer for runtime switching
+            self.fallback_analyzer = direct_analyzer if cli_analyzer else None
             
             # Initialize digest generator
             output_config = self.config.get_output_config()
@@ -134,6 +168,14 @@ class ResearchAgent:
             # Print cache stats
             cache_stats = self.cache_manager.get_cache_stats()
             self.logger.info(f"📊 Cache stats: {cache_stats['total_cached_papers']} papers cached, {cache_stats['cache_size_mb']} MB")
+            
+            # Print analyzer configuration summary
+            analyzer_status = f"🎯 Primary: {self.analyzer_type}"
+            if self.fallback_analyzer:
+                analyzer_status += f" | Fallback: DirectAPI ✅"
+            else:
+                analyzer_status += f" | Fallback: None ❌"
+            self.logger.info(analyzer_status)
             
             self.logger.info("✅ All components initialized successfully")
             
@@ -179,13 +221,40 @@ class ResearchAgent:
             cached_analyses = self.cache_manager.get_cached_analyses(paper_ids)
             return filtered_papers[:10], cached_analyses
         
-        # Analyze only new papers with Claude
+        # Analyze only new papers with Claude (with runtime fallback)
         self.logger.info(f"🔍 Starting Claude analysis for {len(new_papers)} new papers (saved {len(filtered_papers[:10]) - len(new_papers)} from cache)...")
         
-        new_analyses = await self.claude_analyzer.analyze_paper_batch(
-            new_papers,
-            research_interests=research_config.interests
-        )
+        new_analyses = []
+        try:
+            # Try primary analyzer (CLI or Direct API)
+            self.logger.info(f"📊 Using {self.analyzer_type} analyzer for paper analysis")
+            new_analyses = await self.claude_analyzer.analyze_paper_batch(
+                new_papers,
+                research_interests=research_config.interests
+            )
+            
+            # Check if analysis was successful
+            successful_analyses = [a for a in new_analyses if a is not None]
+            if len(successful_analyses) == 0 and self.fallback_analyzer:
+                self.logger.warning(f"⚠️ {self.analyzer_type} analyzer produced no results, trying fallback...")
+                raise Exception(f"{self.analyzer_type} analyzer failed - no analyses produced")
+            
+        except Exception as e:
+            if self.fallback_analyzer:
+                self.logger.warning(f"⚠️ {self.analyzer_type} analyzer failed: {e}")
+                self.logger.info("🔄 Switching to Direct API fallback analyzer...")
+                try:
+                    new_analyses = await self.fallback_analyzer.analyze_paper_batch(
+                        new_papers,
+                        research_interests=research_config.interests
+                    )
+                    self.logger.info("✅ Fallback Direct API analyzer succeeded")
+                except Exception as fallback_error:
+                    self.logger.error(f"❌ Fallback analyzer also failed: {fallback_error}")
+                    new_analyses = []
+            else:
+                self.logger.error(f"❌ {self.analyzer_type} analyzer failed and no fallback available: {e}")
+                new_analyses = []
         
         # Cache the new analyses
         for paper, analysis in zip(new_papers, new_analyses):
