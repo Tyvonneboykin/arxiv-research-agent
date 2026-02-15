@@ -8,6 +8,7 @@ Deploys the research agent to Render using their API.
 
 import json
 import logging
+import os
 import requests
 import time
 from pathlib import Path
@@ -207,7 +208,7 @@ def main():
     logger = setup_logging()
     
     # Configuration
-    api_token = "REDACTED_RENDER_TOKEN"
+    api_token = os.getenv("RENDER_API_TOKEN")  # Required: set in environment
     
     logger.info("🚀 Starting Render deployment...")
     logger.info("=" * 50)

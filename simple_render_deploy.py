@@ -7,6 +7,7 @@ Creates a web service on Render for the ArXiv Research Agent.
 """
 
 import json
+import os
 import requests
 import logging
 
@@ -17,7 +18,7 @@ def deploy_to_render():
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     
-    api_token = "REDACTED_RENDER_TOKEN"
+    api_token = os.getenv("RENDER_API_TOKEN")  # Required: set in environment
     
     # Service configuration - simplified for web service
     service_data = {

@@ -9,7 +9,7 @@ Your ArXiv Research Agent is **ready for deployment** with the following compone
 - ✅ **Docker Support** - `Dockerfile` for containerized deployment  
 - ✅ **Environment Variables** - Production-ready configuration
 - ✅ **Owner ID Configured** - `tea-cu9g9vrqf0us73bvh5s0`
-- ✅ **API Token Valid** - `REDACTED_RENDER_TOKEN`
+- ✅ **API Token Valid** - *(set in RENDER_API_TOKEN env var)*
 
 ### 📧 Email Configuration Ready
 - ✅ **Recipient Configured** - `donvon@vonbase.com`

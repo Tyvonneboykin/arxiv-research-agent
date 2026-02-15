@@ -7,6 +7,7 @@ Deploy directly to Render using manual deployment.
 """
 
 import json
+import os
 import requests
 import logging
 import time
@@ -18,7 +19,7 @@ def create_render_service():
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     
-    api_token = "REDACTED_RENDER_TOKEN"
+    api_token = os.getenv("RENDER_API_TOKEN")  # Required: set in environment
     owner_id = "tea-cu9g9vrqf0us73bvh5s0"
     
     # Create a background service (since we don't need web interface)
